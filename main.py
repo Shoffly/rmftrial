@@ -90,11 +90,11 @@ def fetch_data_rfm(start_date, end_date, db_config):
 # Function to categorize ranks
 def categorize_rank(rank):
     if rank >= 7:
-        return 'high'
+        return 'low'
     elif rank >= 4:
         return 'moderate'
     else:
-        return 'low'
+        return 'high'
 
 # Define the Streamlit app
 def main():
