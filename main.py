@@ -49,7 +49,7 @@ def fetch_data_rfm(start_date, end_date, db_config):
             number_of_orders,
             average_transaction_value,
             days_since_last_order,
-            NTILE(9) OVER (ORDER BY days_since_last_order) AS recency_rank,
+            NTILE(9) OVER (ORDER BY DATEDIFF(NOW(), max_order_date)) AS recency_rank,
             NTILE(9) OVER (ORDER BY frequency DESC) AS frequency_rank,
             NTILE(9) OVER (ORDER BY monetary_value DESC) AS monetary_value_rank,
             first_name
@@ -88,13 +88,17 @@ def fetch_data_rfm(start_date, end_date, db_config):
     return data
 
 # Function to categorize ranks
-def categorize_rank(rank):
-    if rank >= 7:
-        return 'high'
-    elif rank >= 4:
-        return 'moderate'
-    else:
-        return 'low'
+def categorize_recency(rank):
+    # Recency: The highest rank (9) for the most recent orders
+    return 10 - rank
+
+def categorize_frequency(rank):
+    # Frequency: The highest rank (9) for the highest number of orders
+    return rank
+
+def categorize_monetary(rank):
+    # Monetary Value: The highest rank (9) for the highest average spend
+    return rank
 
 # Define the Streamlit app
 def main():
@@ -115,9 +119,9 @@ def main():
         df = pd.DataFrame(response, columns=columns)
 
         # Add rank categories
-        df['recency_category'] = df['recency_rank'].apply(categorize_rank)
-        df['frequency_category'] = df['frequency_rank'].apply(categorize_rank)
-        df['monetary_category'] = df['monetary_value_rank'].apply(categorize_rank)
+        df['recency_category'] = df['recency_rank'].apply(categorize_recency)
+        df['frequency_category'] = df['frequency_rank'].apply(categorize_frequency)
+        df['monetary_category'] = df['monetary_value_rank'].apply(categorize_monetary)
 
         # Filters for rank categories
         recency_filter = st.multiselect('Recency category', options=['high', 'moderate', 'low'], default=['high', 'moderate', 'low'])
