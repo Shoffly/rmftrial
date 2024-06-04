@@ -126,12 +126,17 @@ def main():
         days_since_last_order_min = st.number_input('Minimum Days Since Last Order', value=0)
         days_since_last_order_max = st.number_input('Maximum Days Since Last Order', value=df['days_since_last_order'].max())
 
+        # Filter for branches
+        branches = df['top_branch'].unique()
+        selected_branches = st.multiselect('Branches', options=branches, default=branches)
+
         filtered_df = df[
             (df['recency_category'].isin(recency_filter)) &
             (df['frequency_category'].isin(frequency_filter)) &
             (df['monetary_category'].isin(monetary_filter)) &
             (df['days_since_last_order'] >= days_since_last_order_min) &
-            (df['days_since_last_order'] <= days_since_last_order_max)
+            (df['days_since_last_order'] <= days_since_last_order_max) &
+            (df['top_branch'].isin(selected_branches))
         ]
 
         st.dataframe(filtered_df)
