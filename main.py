@@ -49,7 +49,7 @@ def fetch_data_rfm(start_date, end_date, db_config):
             number_of_orders,
             average_transaction_value,
             days_since_last_order,
-            NTILE(9) OVER (ORDER BY DATEDIFF(NOW(), max_order_date)) AS recency_rank,
+            NTILE(9) OVER (ORDER BY days_since_last_order) AS recency_rank,
             NTILE(9) OVER (ORDER BY frequency DESC) AS frequency_rank,
             NTILE(9) OVER (ORDER BY monetary_value DESC) AS monetary_value_rank,
             first_name
@@ -88,23 +88,7 @@ def fetch_data_rfm(start_date, end_date, db_config):
     return data
 
 # Function to categorize ranks
-def categorize_recency(rank):
-    if rank >= 7:
-        return 'high'
-    elif rank >= 4:
-        return 'moderate'
-    else:
-        return 'low'
-
-def categorize_frequency(rank):
-    if rank >= 7:
-        return 'high'
-    elif rank >= 4:
-        return 'moderate'
-    else:
-        return 'low'
-
-def categorize_monetary(rank):
+def categorize_rank(rank):
     if rank >= 7:
         return 'high'
     elif rank >= 4:
@@ -130,10 +114,10 @@ def main():
         columns = ['userid', 'last_order_date', 'number_of_orders', 'average_transaction_value', 'days_since_last_order', 'recency_rank', 'frequency_rank', 'monetary_value_rank', 'first_name', 'top_branch']
         df = pd.DataFrame(response, columns=columns)
 
-        # Group ranks into categories
-        df['recency_category'] = df['recency_rank'].apply(categorize_recency)
-        df['frequency_category'] = df['frequency_rank'].apply(categorize_frequency)
-        df['monetary_category'] = df['monetary_value_rank'].apply(categorize_monetary)
+        # Add rank categories
+        df['recency_category'] = df['recency_rank'].apply(categorize_rank)
+        df['frequency_category'] = df['frequency_rank'].apply(categorize_rank)
+        df['monetary_category'] = df['monetary_value_rank'].apply(categorize_rank)
 
         # Filters for rank categories
         recency_filter = st.multiselect('Recency category', options=['high', 'moderate', 'low'], default=['high', 'moderate', 'low'])
@@ -146,9 +130,16 @@ def main():
         branches = df['top_branch'].unique()
         selected_branches = st.multiselect('Branches', options=branches, default=branches)
 
-        # Apply filters
         filtered_df = df[
             (df['recency_category'].isin(recency_filter)) &
             (df['frequency_category'].isin(frequency_filter)) &
             (df['monetary_category'].isin(monetary_filter)) &
-            (df['days_since_last_order']
+            (df['days_since_last_order'] >= days_since_last_order_min) &
+            (df['days_since_last_order'] <= days_since_last_order_max) &
+            (df['top_branch'].isin(selected_branches))
+        ]
+
+        st.dataframe(filtered_df)
+
+if __name__ == '__main__':
+    main()
