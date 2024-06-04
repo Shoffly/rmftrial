@@ -98,7 +98,7 @@ def categorize_rank(rank):
 
 # Define the Streamlit app
 def main():
-    st.title("RFM Analysis")
+    st.title("Better Segmentanator")
 
     # Date range filter
     start_date = st.date_input('Start date', datetime(2023, 5, 20))
