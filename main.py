@@ -123,8 +123,16 @@ def main():
         recency_filter = st.multiselect('Recency category', options=['high', 'moderate', 'low'], default=['high', 'moderate', 'low'])
         frequency_filter = st.multiselect('Frequency category', options=['high', 'moderate', 'low'], default=['high', 'moderate', 'low'])
         monetary_filter = st.multiselect('Monetary category', options=['high', 'moderate', 'low'], default=['high', 'moderate', 'low'])
+        days_since_last_order_min = st.number_input('Minimum Days Since Last Order', value=0)
+        days_since_last_order_max = st.number_input('Maximum Days Since Last Order', value=df['days_since_last_order'].max())
 
-        filtered_df = df[df['recency_category'].isin(recency_filter) & df['frequency_category'].isin(frequency_filter) & df['monetary_category'].isin(monetary_filter)]
+        filtered_df = df[
+            (df['recency_category'].isin(recency_filter)) &
+            (df['frequency_category'].isin(frequency_filter)) &
+            (df['monetary_category'].isin(monetary_filter)) &
+            (df['days_since_last_order'] >= days_since_last_order_min) &
+            (df['days_since_last_order'] <= days_since_last_order_max)
+        ]
 
         st.dataframe(filtered_df)
 
