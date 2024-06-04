@@ -89,16 +89,28 @@ def fetch_data_rfm(start_date, end_date, db_config):
 
 # Function to categorize ranks
 def categorize_recency(rank):
-    # Recency: The highest rank (9) for the most recent orders
-    return 10 - rank
+    if rank >= 7:
+        return 'high'
+    elif rank >= 4:
+        return 'moderate'
+    else:
+        return 'low'
 
 def categorize_frequency(rank):
-    # Frequency: The highest rank (9) for the highest number of orders
-    return rank
+    if rank >= 7:
+        return 'high'
+    elif rank >= 4:
+        return 'moderate'
+    else:
+        return 'low'
 
 def categorize_monetary(rank):
-    # Monetary Value: The highest rank (9) for the highest average spend
-    return rank
+    if rank >= 7:
+        return 'high'
+    elif rank >= 4:
+        return 'moderate'
+    else:
+        return 'low'
 
 # Define the Streamlit app
 def main():
@@ -118,7 +130,7 @@ def main():
         columns = ['userid', 'last_order_date', 'number_of_orders', 'average_transaction_value', 'days_since_last_order', 'recency_rank', 'frequency_rank', 'monetary_value_rank', 'first_name', 'top_branch']
         df = pd.DataFrame(response, columns=columns)
 
-        # Add rank categories
+        # Group ranks into categories
         df['recency_category'] = df['recency_rank'].apply(categorize_recency)
         df['frequency_category'] = df['frequency_rank'].apply(categorize_frequency)
         df['monetary_category'] = df['monetary_value_rank'].apply(categorize_monetary)
@@ -134,16 +146,9 @@ def main():
         branches = df['top_branch'].unique()
         selected_branches = st.multiselect('Branches', options=branches, default=branches)
 
+        # Apply filters
         filtered_df = df[
             (df['recency_category'].isin(recency_filter)) &
             (df['frequency_category'].isin(frequency_filter)) &
             (df['monetary_category'].isin(monetary_filter)) &
-            (df['days_since_last_order'] >= days_since_last_order_min) &
-            (df['days_since_last_order'] <= days_since_last_order_max) &
-            (df['top_branch'].isin(selected_branches))
-        ]
-
-        st.dataframe(filtered_df)
-
-if __name__ == '__main__':
-    main()
+            (df['days_since_last_order']
